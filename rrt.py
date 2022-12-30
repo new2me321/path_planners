@@ -1,8 +1,8 @@
-import numpy as np
 import math
+import time
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import time
 
 from djikstra import Djikstra
 
@@ -19,7 +19,7 @@ class RRT:
 
     """
 
-    def __init__(self, start, goal,   map_size, max_iter=10000, max_step_size=0.1, goal_tolerance=0.5):
+    def __init__(self, start, goal,   map_size, max_iter=100, max_step_size=1, goal_tolerance=0.5):
         self.start = start  # starting point
         self.goal = goal  # goal point
         self.goal_tolerance = goal_tolerance  # tolerance
@@ -39,6 +39,9 @@ class RRT:
         return (pt1-pt2)/distance
 
     def findNearestNode(self, point, tree):
+        """
+        Finds the nearest node to a random point
+        """
         nearest_node = tree[0]
         nearest_distance = self.calc_distance(point, nearest_node)
         for node in tree:
@@ -50,7 +53,9 @@ class RRT:
         return nearest_node
 
     def generateNewNode(self, point, nearest_node):
-
+        """
+        Generates a new node for the tree given a point thats nearest to the nearest node
+        """
         # compute distance between a new point and nearest_node of a tree
         distance = self.calc_distance(point, nearest_node)
 
@@ -59,6 +64,7 @@ class RRT:
         else:
             new_node = self.newNodeSelector(point, nearest_node)
 
+            # TODO: Obstacle detection strategy should be implemented
             # if new_node hits an obstacle:
             # return None
 
@@ -76,6 +82,9 @@ class RRT:
         return new_node
 
     def generateRandomPoint(self):
+        """
+        Generates a random point
+        """
         x = np.random.uniform(0, self.map_width)
         y = np.random.uniform(0, self.map_height)
 
@@ -115,6 +124,9 @@ class RRT:
         return found if found is False else tree
 
     def get_path(self, use_djikstra):
+        """
+        Returns the waypoints to the goal if found, otherwise raises a ValueError. 
+        """
         tree = self.find_path()
 
         if tree is not False:
@@ -123,37 +135,15 @@ class RRT:
                 djikstra = Djikstra(self.start, self.goal, np.array(
                     tree), self.parent_pointers)
                 path = djikstra.get_path()
-            else:
-                tree_node_distances = [self.calc_distance(
-                    node, self.goal) for node in tree]
-
-                # sort the tree nodes by distance
-                sorted_trees = [node for _, node in sorted(
-                    zip(tree_node_distances, tree))]
-                # print("Sorted trees", sorted_trees)
-                path = []  # stores the path to the goal
-
-                next_node = self.goal
-                dist_limit = self.calc_distance(self.start, self.goal)
-                print("Limit", dist_limit)
-
-                for node in sorted_trees:
-                    node_to_goal = self.calc_distance(node, self.goal)
-                    nearest_dist = self.calc_distance(node, next_node)
-
-                    if (node_to_goal > dist_limit):#(nearest_dist <= self.goal_tolerance):
-                        next_node = node
-                        break
-                    else:   
-                        path.append(node)
-
-                print("Path:", len(path))
 
             return np.array(tree), np.array(path)
         else:
             raise ValueError("Could not find path to goal")
 
     def visualize(self):
+        """
+        Visualizes the trees and shortest path
+        """
         tree, path = self.get_path(use_djikstra=True)
 
         # Extract the x and y coordinates of the points in the path
@@ -195,9 +185,9 @@ class RRT:
 
 
 if __name__ == '__main__':
-    # np.random.seed(0)  # set seed to repeat same randomness
+    np.random.seed(0)  # set seed to repeat same randomness
     start = np.array([5, 70])
-    goal = np.array([79, 30])
+    goal = np.array([78, 90])
     max_iter = 1000
     max_step_size = 5
     goal_tolerance = 2*max_step_size
