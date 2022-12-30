@@ -92,13 +92,13 @@ class RRT:
 
     def find_path(self):
         """
-        Finds the path to the goal point
+        The main function. Finds the path to the goal point
         """
         found = False
         tree = [self.start]
         elapsed_iters = 0
-
         start_time = time.time()
+        
         for i in range(self.max_iter):
             elapsed_iters += 1
             random_point = self.generateRandomPoint()
@@ -111,12 +111,14 @@ class RRT:
                 self.parent_pointers[tuple(
                     new_node)] = nearest_node[0], nearest_node[1]
 
-            # check if the node is already near the goal point
+            # check if the the node is near the goal point
             if self.calc_distance(new_node, self.goal) <= self.goal_tolerance:
                 found = True
                 break
+
         end_time = time.time()
         elapsed_time = end_time - start_time
+
         if found:
             print("RRT path found in {} seconds".format(elapsed_time))
             print("Iterations taken:", elapsed_iters)
