@@ -154,7 +154,7 @@ class RRT:
             raise ValueError("Could not find path to goal")
 
     def visualize(self):
-        tree, path = self.get_path(use_djikstra=False)
+        tree, path = self.get_path(use_djikstra=True)
 
         # Extract the x and y coordinates of the points in the path
         nodes_x, nodes_y = np.split(tree, 2, axis=1)
