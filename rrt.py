@@ -111,14 +111,14 @@ class RRT:
 
             if new_node is not None:
                 tree_nodes.append(new_node)
-
-                self.parent_pointers[tuple(
-                    new_node)] = nearest_node[0], nearest_node[1]
-
                 tree_vertices.append(nearest_node)
                 tree_vertices.append(new_node)
                 tree_branches.append(Path.MOVETO)
                 tree_branches.append(Path.LINETO)
+
+                # create pointers for parent-child connections
+                self.parent_pointers[tuple(
+                    new_node)] = nearest_node[0], nearest_node[1]
 
             # check if the the node is near the goal point
             if self.calc_distance(new_node, self.goal) <= self.goal_tolerance:
@@ -146,7 +146,7 @@ class RRT:
                 djikstra = Djikstra(self.start, self.goal, np.array(
                     tree_nodes), self.parent_pointers)
                 path = djikstra.get_path()
-                # nns
+             
             return tree, np.array(path)
         else:
             raise ValueError("Could not find path to goal")
@@ -155,12 +155,8 @@ class RRT:
         """
         Visualizes the tree and shortest path
         """
-        tree, path = self.get_path(use_djikstra=True)
-        tree_nodes, tree_vertices, tree_branches = np.array(
-            tree[0]), tree[1], tree[2]
-
-        # Extract the x and y coordinates of the points in the path
-        nodes_x, nodes_y = np.split(tree_nodes, 2, axis=1)
+        tree, shortest_path = self.get_path(use_djikstra=True)
+        tree_nodes, tree_vertices, tree_branches = np.array(tree[0]), tree[1], tree[2]
 
         # Set up the figure and axis
         fig, ax = plt.subplots()
@@ -168,49 +164,44 @@ class RRT:
         ax.set_xlim(0, self.map_width)
         ax.set_ylim(0, self.map_height)
 
-        # draw points
-        # scatter = ax.scatter(nodes_x, nodes_y, s=1, c='black', label='nodes')
+        # draw start and goal points
         ax.scatter(self.start[0], self.start[1], s=80,
                    c='red', marker='*', label='Start')
         ax.scatter(self.goal[0], self.goal[1], s=80,
                    c='green', marker='*', label='Goal')
 
-        connections = Path(tree_vertices, tree_branches)
-        patch = patches.PathPatch(connections)
+        rrt_path = Path(tree_vertices, tree_branches)
+        patch = patches.PathPatch(rrt_path)
         ax.add_patch(patch)
 
         # Function to update the plot at each frame
         def update(num):
             ax.set_title("RRT iterations: " + str(num))
 
-            # Update the x and y data of the line plot
-            # scatter.set_offsets(tree_nodes[:num+1])
-
             # draw connected branches of the tree
-            new_path = Path(tree_vertices[:2*num+1], tree_branches[:2*num+1])
-            patch.set_path(new_path)
+            rrt_path = Path(tree_vertices[:2*num+1], tree_branches[:2*num+1])
+            patch.set_path(rrt_path)
 
-            if len(nodes_x)-1 == num:
-                ax.scatter(nodes_x[-1], nodes_y[-1], s=5,
-                           c='gold', label='last node')
-                ax.plot(path[:, 0], path[:, 1],
+            if len(tree_nodes)-1 == num:
+                # ax.scatter(nodes_x[-1], nodes_y[-1], s=30,
+                #            c='gold', label='last node')
+                ax.plot(shortest_path[:, 0], shortest_path[:, 1],
                         c='crimson', label='shortest path')
                 ax.legend()
 
-            return patch,  # scatter
+            return patch, 
 
         # Create the animation
         animation = FuncAnimation(fig, update, frames=len(
-            nodes_x), interval=10, repeat=False)
+            tree_nodes), interval=10, repeat=False)
 
-        ax.legend()
         plt.show()
 
 
 if __name__ == '__main__':
-    np.random.seed(0)  # set seed to repeat same randomness
+    # np.random.seed(0)  # set seed for reproducibility
     start = np.array([5, 70])
-    goal = np.array([78, 90])
+    goal = np.array([80, 20])
     max_iter = 1000
     max_step_size = 5
     goal_tolerance = 2*max_step_size
