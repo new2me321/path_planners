@@ -146,7 +146,7 @@ class RRT:
                 djikstra = Djikstra(self.start, self.goal, np.array(
                     tree_nodes), self.parent_pointers)
                 path = djikstra.get_path()
-             
+
             return tree, np.array(path)
         else:
             raise ValueError("Could not find path to goal")
@@ -156,7 +156,8 @@ class RRT:
         Visualizes the tree and shortest path
         """
         tree, shortest_path = self.get_path(use_djikstra=True)
-        tree_nodes, tree_vertices, tree_branches = np.array(tree[0]), tree[1], tree[2]
+        tree_nodes, tree_vertices, tree_branches = np.array(
+            tree[0]), tree[1], tree[2]
 
         # Set up the figure and axis
         fig, ax = plt.subplots()
@@ -169,7 +170,9 @@ class RRT:
                    c='red', marker='*', label='Start')
         ax.scatter(self.goal[0], self.goal[1], s=80,
                    c='green', marker='*', label='Goal')
-
+        shortest_path_line, = ax.plot(shortest_path[:, 0], shortest_path[:, 1],
+                                      c='crimson', label='shortest path')
+        ax.legend()
         rrt_path = Path(tree_vertices, tree_branches)
         patch = patches.PathPatch(rrt_path)
         ax.add_patch(patch)
@@ -185,21 +188,22 @@ class RRT:
             if len(tree_nodes)-1 == num:
                 # ax.scatter(nodes_x[-1], nodes_y[-1], s=30,
                 #            c='gold', label='last node')
-                ax.plot(shortest_path[:, 0], shortest_path[:, 1],
-                        c='crimson', label='shortest path')
-                ax.legend()
+                shortest_path_line.set_data(
+                    shortest_path[:, 0], shortest_path[:, 1])
+            else:
+                shortest_path_line.set_data([], [])
 
-            return patch, 
+            return patch,
 
         # Create the animation
         animation = FuncAnimation(fig, update, frames=len(
-            tree_nodes), interval=10, repeat=False)
+            tree_nodes), interval=50, repeat=True, repeat_delay=1000)
 
         plt.show()
 
 
 if __name__ == '__main__':
-    # np.random.seed(0)  # set seed for reproducibility
+    np.random.seed(0)  # set seed for reproducibility
     start = np.array([5, 70])
     goal = np.array([80, 20])
     max_iter = 1000
