@@ -6,6 +6,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.path import Path
 import matplotlib.patches as patches
 from djikstra import Djikstra
+from collections import defaultdict
 
 
 class RRT:
@@ -28,7 +29,7 @@ class RRT:
         self.max_iter = max_iter
         self.map_width = map_size[0]
         self.map_height = map_size[1]
-        self.parent_pointers = {}
+        self.graph = defaultdict(list)
 
         print("RRT initializating...")
 
@@ -116,13 +117,16 @@ class RRT:
                 tree_branches.append(Path.MOVETO)
                 tree_branches.append(Path.LINETO)
 
-                # create pointers for parent-child connections
-                self.parent_pointers[tuple(
-                    new_node)] = nearest_node[0], nearest_node[1]
+                # create a graph (pointers for parent-child connections)
+                self.graph[tuple(nearest_node)].append(tuple(new_node))
 
             # check if the the node is near the goal point
             if self.calc_distance(new_node, self.goal) <= self.goal_tolerance:
                 found = True
+                tree_nodes.append(self.goal)
+                self.graph[tuple(self.goal)].append(tuple(new_node))
+                self.graph[tuple(nearest_node)].append(tuple(self.goal))
+
                 break
 
         end_time = time.time()
@@ -141,10 +145,9 @@ class RRT:
         tree = self.find_path()
 
         if tree is not False:
-            tree_nodes = tree[0]
             if use_djikstra == True:
-                djikstra = Djikstra(self.start, self.goal, np.array(
-                    tree_nodes), self.parent_pointers)
+                djikstra = Djikstra(self.start, self.goal,
+                                    self.graph)
                 path = djikstra.get_path()
 
             return tree, np.array(path)
@@ -197,15 +200,15 @@ class RRT:
 
         # Create the animation
         animation = FuncAnimation(fig, update, frames=len(
-            tree_nodes), interval=50, repeat=True, repeat_delay=1000)
+            tree_nodes), interval=10, repeat=False, repeat_delay=1000)
 
         plt.show()
 
 
 if __name__ == '__main__':
-    np.random.seed(0)  # set seed for reproducibility
+    # np.random.seed(0)  # set seed for reproducibility
     start = np.array([5, 70])
-    goal = np.array([80, 20])
+    goal = np.array([64, 80])
     max_iter = 1000
     max_step_size = 5
     goal_tolerance = 2*max_step_size
