@@ -6,6 +6,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.path import Path
 import matplotlib.patches as patches
 from djikstra import Djikstra
+from astar import Astar
 from collections import defaultdict
 
 
@@ -122,11 +123,10 @@ class RRT:
 
             # check if the the node is near the goal point
             if self.calc_distance(new_node, self.goal) <= self.goal_tolerance:
-                found = True
-                tree_nodes.append(self.goal)
                 self.graph[tuple(self.goal)].append(tuple(new_node))
                 self.graph[tuple(nearest_node)].append(tuple(self.goal))
-
+                
+                found = True
                 break
 
         end_time = time.time()
@@ -138,18 +138,20 @@ class RRT:
 
         return found if found is False else [tree_nodes, tree_vertices, tree_branches]
 
-    def get_path(self, use_djikstra):
+    def get_path(self, search):
         """
         Returns the waypoints to the goal if found, otherwise raises a ValueError. 
         """
         tree = self.find_path()
 
         if tree is not False:
-            if use_djikstra == True:
-                djikstra = Djikstra(self.start, self.goal,
-                                    self.graph)
+            if search == 'djikstra':
+                djikstra = Djikstra(self.start, self.goal, self.graph)
                 path = djikstra.get_path()
-
+            
+            if search == 'astar':
+                astar = Astar(self.start, self.goal, self.graph)
+                path = astar.get_path()
             return tree, np.array(path)
         else:
             raise ValueError("Could not find path to goal")
@@ -158,7 +160,7 @@ class RRT:
         """
         Visualizes the tree and shortest path
         """
-        tree, shortest_path = self.get_path(use_djikstra=True)
+        tree, shortest_path = self.get_path(search='astar')
         tree_nodes, tree_vertices, tree_branches = np.array(
             tree[0]), tree[1], tree[2]
 
@@ -206,11 +208,11 @@ class RRT:
 
 
 if __name__ == '__main__':
-    # np.random.seed(0)  # set seed for reproducibility
-    start = np.array([5, 70])
+    np.random.seed(112)  # set seed for reproducibility
+    start = np.array([75, 70])
     goal = np.array([5, 20])
     max_iter = 1000
-    max_step_size = 5
+    max_step_size = 2.5
     goal_tolerance = 2*max_step_size
     map_size = (100, 100)
 
