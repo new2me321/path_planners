@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import math
-
+import ast
 
 class Djikstra:
     """
@@ -94,9 +94,19 @@ class Djikstra:
             shortest_path.append(current_point)
             current_point = visited[tuple(current_point)]
 
-        print(shortest_path)
         # Reverse the list to get the shortest path from the start to the goal node
         shortest_path = shortest_path[::-1]
         shortest_path = [np.array(point) for point in shortest_path]
 
         return shortest_path
+
+
+if __name__ == "__main__":
+    with open('graph_data.txt', 'r') as f:
+        graph = ast.literal_eval(f.read())
+
+    start = np.array([75, 70])
+    goal = np.array([5, 20])
+
+    astar = Djikstra(start, goal, graph)
+    astar.get_path()
