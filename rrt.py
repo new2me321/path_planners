@@ -200,7 +200,7 @@ class RRT:
 
         # Create the animation
         animation = FuncAnimation(fig, update, frames=len(
-            tree_nodes), interval=10, repeat=False, repeat_delay=1000)
+            tree_nodes), interval=50, repeat=False, repeat_delay=1000)
 
         plt.show()
 
@@ -208,7 +208,7 @@ class RRT:
 if __name__ == '__main__':
     # np.random.seed(0)  # set seed for reproducibility
     start = np.array([5, 70])
-    goal = np.array([64, 80])
+    goal = np.array([5, 20])
     max_iter = 1000
     max_step_size = 5
     goal_tolerance = 2*max_step_size
