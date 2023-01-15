@@ -13,14 +13,19 @@ class Djikstra:
         The starting node of the path.
     goal : array_like
         The goal node of the path.
+    graph : a dictionary of tuples where the values are the list of nodes(vertices). 
+        For eg. 
+        G = {(1, 2) : [(3,5), (2,4), (1,3)],
+            (1, 3) : [(3,5), (2,2)],
+            (2, 2) : [(3,5), (2,6), (3,3)]
+            }
     """
 
-    def __init__(self, start, goal, tree, parent_pointers):
+    def __init__(self, start, goal, graph):
 
         self.start = start
         self.goal = goal
-        self.tree = tree
-        self.parent_pointers = parent_pointers
+        self.graph = graph
 
     def calc_distance(self, pt1, pt2):
         return math.sqrt((pt1[0]-pt2[0])**2 + (pt1[1]-pt2[1])**2)
@@ -31,44 +36,42 @@ class Djikstra:
 
         distances = {}  # holds the distances from the start to each point in the tree
 
-        # Set the distance from the start to the goal to 0
-        distances[tuple(self.goal)] = 0
-
         # Set the distance from the start to each point in the tree to infinity
-        for point in self.tree:
+        for point in self.graph:
             if not np.array_equal(point, self.goal):
                 distances[tuple(point)] = float('inf')
 
-        # contains all the points in the tree that were visited
-        visited_nodes = [self.goal]
+        # Set the distance from the start to 0  and the distance to goal to infinity
+        distances[tuple(self.start)] = 0
+        distances[tuple(self.goal)] = float('inf')
 
-        while len(visited_nodes) < len(self.tree):
+        # contains all the points in the tree that were visited
+        visited_nodes = []
+
+        # path from goal to start
+        path = {}
+        path[tuple(self.start)] = None
+
+        shortest_path = []
+        while len(visited_nodes) < len(self.graph):
+
             # Find the point in the tree with the smallest distance from the start that has not yet been visited and add to the visited_nodes
-            current_point = min([point for point in self.tree if tuple(point) not in [
+            current_point = min([point for point in self.graph if tuple(point) not in [
                                 tuple(p) for p in visited_nodes]], key=lambda x: distances[tuple(x)])
             visited_nodes.append(current_point)
 
-            # Update the distances of all of the current point's neighbors to the start
-            for neighbor in self.parent_pointers:
-                if np.array_equal(self.parent_pointers[tuple(neighbor)], current_point):
-                    distances[tuple(neighbor)] = min(distances[tuple(neighbor)], distances[tuple(
-                        current_point)] + self.calc_distance(current_point, neighbor))
+            if current_point == tuple(self.goal):
+                shortest_path = self.reconstruct_path(path)
+                break
 
-        shortest_path = [self.goal] # stores the shortest path
+            for neighbor in self.graph[current_point]:
 
-        # construct the shortest path from the goal to the start node using the parent pointers
-        
-        closest_goal_node = list(self.parent_pointers)[-1]
-        current_point = closest_goal_node
+                new_cost = distances[tuple(
+                    current_point)] + self.calc_distance(current_point, neighbor)
 
-        while current_point is not None and tuple(current_point) in self.parent_pointers:
-            shortest_path.append(current_point)
-            current_point = self.parent_pointers[tuple(current_point)]
-        shortest_path.append(current_point)
-
-        # Reverse the list to get the shortest path from the goal to the start node
-        shortest_path = shortest_path[::-1]
-        shortest_path = [np.array(point) for point in shortest_path]
+                if neighbor not in distances or new_cost < distances[neighbor]:
+                    distances[tuple(neighbor)] = new_cost
+                    path[tuple(neighbor)] = current_point
 
         end_time = time.time()
         elapsed_time = end_time - start_time
@@ -78,6 +81,21 @@ class Djikstra:
             print("Dijkstra's algorithm for finding the shortest path took {} seconds".format(
                 elapsed_time))
         else:
-            print("Shortest path not found!")
+            # print("Shortest path not found!")
+            raise ValueError("Shortest path not found!")
+
+        return shortest_path
+
+    def reconstruct_path(self, visited):
+        shortest_path = []
+        current_point = tuple(self.goal)
+
+        while current_point is not None and tuple(current_point) in self.graph:
+            shortest_path.append(current_point)
+            current_point = visited[tuple(current_point)]
+
+        # Reverse the list to get the shortest path from the goal to the start node
+        shortest_path = shortest_path[::-1]
+        shortest_path = [np.array(point) for point in shortest_path]
 
         return shortest_path
