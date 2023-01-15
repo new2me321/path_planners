@@ -94,7 +94,8 @@ class Djikstra:
             shortest_path.append(current_point)
             current_point = visited[tuple(current_point)]
 
-        # Reverse the list to get the shortest path from the goal to the start node
+        print(shortest_path)
+        # Reverse the list to get the shortest path from the start to the goal node
         shortest_path = shortest_path[::-1]
         shortest_path = [np.array(point) for point in shortest_path]
 
