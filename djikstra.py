@@ -34,9 +34,9 @@ class Djikstra:
 
         start_time = time.time()
 
-        distances = {}  # holds the distances from the start to each point in the tree
+        distances = {}  # holds the distances from the start to each point in the graph
 
-        # Set the distance from the start to each point in the tree to infinity
+        # Set the distance from the start to each point in the graph to infinity
         for point in self.graph:
             if not np.array_equal(point, self.goal):
                 distances[tuple(point)] = float('inf')
@@ -45,7 +45,7 @@ class Djikstra:
         distances[tuple(self.start)] = 0
         distances[tuple(self.goal)] = float('inf')
 
-        # contains all the points in the tree that were visited
+        # contains all the points in the graph that were visited
         visited_nodes = []
 
         # path from goal to start
@@ -55,7 +55,7 @@ class Djikstra:
         shortest_path = []
         while len(visited_nodes) < len(self.graph):
 
-            # Find the point in the tree with the smallest distance from the start that has not yet been visited and add to the visited_nodes
+            # Find the point in the graph with the smallest distance from the start that has not yet been visited and add to the visited_nodes
             current_point = min([point for point in self.graph if tuple(point) not in [
                                 tuple(p) for p in visited_nodes]], key=lambda x: distances[tuple(x)])
             visited_nodes.append(current_point)
